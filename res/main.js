@@ -1,6 +1,6 @@
 var currentYear = (new Date()).getFullYear()
 var initialPedigreeNode = {
-    name: "J",
+    name: "",
     sex: "",
     yob: currentYear,
     parents: [],
@@ -74,6 +74,7 @@ var app = new Vue({
                             //Non-related individuals will only get a single partner relating them back to the blood relative
                             partnerData.partners = [nodeID]
                             partnerData.nPartners = 1
+                            partnerData.parents = ["non-blood"]
                             this.$set(this.pedigreeNodes, nodeData.partners[partnerIndex], partnerData)
                         }
                     })
@@ -91,9 +92,9 @@ var app = new Vue({
                             nodeData.children[childIndex] = ObjectID().str
                             this.$set(this.pedigreeNodes, nodeID, nodeData)
                             var childData = JSON.parse(JSON.stringify(initialPedigreeNode))
-                            //Children will get their parents from the current non-blood node, and that node's only partner node.
-                            //Note: this only works barring incest, and remarriage within the family.
-                            childData.parents = [nodeID, nodeData.partners[0]]
+                            //Children will get their parent from the current non-blood node
+                            //TODO: Add other parent id somehow
+                            childData.parents = [nodeID]
                             this.$set(this.pedigreeNodes, nodeData.children[childIndex], childData)
                         }
                     })
@@ -111,62 +112,53 @@ var app = new Vue({
             document.querySelector(this.treeOpts.target).innerHTML = ""
             dTree.init(this.generateTree(), this.treeOpts);
         },
-        generateTree: function () {
-            var probandNode = {
-                name: this.pedigreeNodes[this.probandID].name,
-                class: "node " + this.pedigreeNodes[this.probandID].sex.toLowerCase(),
-                extra: {
-                    yob: this.pedigreeNodes[this.probandID].yob
-                },
-                marriages: []
-            }
-            this.pedigreeNodes[this.probandID].partners.forEach((partnerID) => {
-                partnerData = this.pedigreeNodes[partnerID]
-                var children = partnerData.children.map((childID) => {
-                    var childData = this.pedigreeNodes[childID]
-                    var childNode = {
-                        name: childData.name,
-                        class: "node " + this.pedigreeNodes[childID].sex.toLowerCase(),
-                        extra: {
-                            yob: this.pedigreeNodes[childID].yob
-                        },        
-                        marriages: []
-                    }
-                    var grandChildren = childData.children.map((grandchildID) => {
-                        var grandchildData = this.pedigreeNodes[grandchildID]
-                        return {
-                            name: grandchildData.name,
-                            class: "node " + this.pedigreeNodes[grandchildID].sex.toLowerCase(),
-                            extra: {
-                                yob: this.pedigreeNodes[grandchildID].yob
-                            },        
-                            marriages: []
-                        }
-                    })
-                    childNode.marriages.push({
-                        spouse: {
-                            name: partnerData.name,
-                            class: "node " + this.pedigreeNodes[partnerID].sex.toLowerCase(),
-                            extra: {
-                                yob: this.pedigreeNodes[partnerID].yob
-                            },       
-                        },
-                        children: childgrandChildrenren
-                    })
-                    return childNode
-                })
-                probandNode.marriages.push({
-                    spouse: {
-                        name: partnerData.name,
-                        class: "node " + this.pedigreeNodes[partnerID].sex.toLowerCase(),
-                        extra: {
-                            yob: this.pedigreeNodes[partnerID].yob
-                        },       
+        generateChildren: function(partnerData) {
+            var children = []
+            partnerData.children.forEach((childID) => {
+                var childData = this.pedigreeNodes[childID]
+                children.push({
+                    name: childData.name,
+                    class: "node " + childData.sex.toLowerCase(),
+                    extra: {
+                        yob: childData.yob
                     },
-                    children: children
+                    marriages: this.generateMarriages(childData)
                 })
             })
-            var familyData = [probandNode]
+            return children
+        },
+        generateMarriages: function(nodeData) {
+            var marriages = []
+            nodeData.partners.forEach((partnerID) => {
+                var partnerData = this.pedigreeNodes[partnerID]
+                marriages.push({
+                    spouse: {
+                        name: partnerData.name,
+                        class: "node " + partnerData.sex.toLowerCase(),
+                        extra: {
+                            yob: partnerData.yob
+                        },
+                    },
+                    children: this.generateChildren(partnerData)
+                })
+            })
+            return marriages
+        },
+        generateTree: function () {
+            var familyData = []
+            Object.values(this.pedigreeNodes).forEach((nodeData) => {
+                if(nodeData.parents.length == 0){
+                    var topLevelNode = {
+                        name: nodeData.name,
+                        class: "node " + nodeData.sex.toLowerCase(),
+                        extra: {
+                            yob: nodeData.yob
+                        },
+                        marriages: this.generateMarriages(nodeData)
+                    }
+                    familyData.push(topLevelNode)
+                }
+            })
             return familyData
         }
     },
