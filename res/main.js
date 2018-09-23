@@ -16,6 +16,7 @@ var app = new Vue({
             phase: 1,
             phaseValid: {},
             probandID: ObjectID().str,
+            currentNodeID: undefined,
             nProbandParnters: 0,
             probandPartners: [],
             pedigreeNodes: {},
@@ -45,6 +46,21 @@ var app = new Vue({
         },
     },
     methods: {
+        nextNode: function(){
+            if(this.phase == 2){
+                var nextNodeInfo = Object.entries(this.pedigreeNodes).find(([nodeID, nodeData]) => {
+                    if(nodeData.nPartners == undefined){
+                        return true
+                    }
+                })
+                if(nextNodeInfo != undefined) {
+                    this.currentNodeID = nextNodeInfo[0]
+                }
+                else { 
+                    this.phase++;
+                }
+            }
+        },
         updatePedigree: function(){
             Object.entries(this.pedigreeNodes).forEach(([nodeID, nodeData]) => {
                 if(parseInt(nodeData.nPartners) > 0){
@@ -57,6 +73,7 @@ var app = new Vue({
                             if(nodeData.sex == "Female") partnerData.sex = "Male"
                             //Non-related individuals will only get a single partner relating them back to the blood relative
                             partnerData.partners = [nodeID]
+                            partnerData.nPartners = 1
                             this.$set(this.pedigreeNodes, nodeData.partners[partnerIndex], partnerData)
                         }
                     })
@@ -107,13 +124,36 @@ var app = new Vue({
                 partnerData = this.pedigreeNodes[partnerID]
                 var children = partnerData.children.map((childID) => {
                     var childData = this.pedigreeNodes[childID]
-                    return {
+                    var childNode = {
                         name: childData.name,
                         class: "node " + this.pedigreeNodes[childID].sex.toLowerCase(),
                         extra: {
                             yob: this.pedigreeNodes[childID].yob
                         },        
+                        marriages: []
                     }
+                    var grandChildren = childData.children.map((grandchildID) => {
+                        var grandchildData = this.pedigreeNodes[grandchildID]
+                        return {
+                            name: grandchildData.name,
+                            class: "node " + this.pedigreeNodes[grandchildID].sex.toLowerCase(),
+                            extra: {
+                                yob: this.pedigreeNodes[grandchildID].yob
+                            },        
+                            marriages: []
+                        }
+                    })
+                    childNode.marriages.push({
+                        spouse: {
+                            name: partnerData.name,
+                            class: "node " + this.pedigreeNodes[partnerID].sex.toLowerCase(),
+                            extra: {
+                                yob: this.pedigreeNodes[partnerID].yob
+                            },       
+                        },
+                        children: childgrandChildrenren
+                    })
+                    return childNode
                 })
                 probandNode.marriages.push({
                     spouse: {
@@ -132,6 +172,7 @@ var app = new Vue({
     },
     mounted: function(){
         this.$set(this.pedigreeNodes, this.probandID, JSON.parse(JSON.stringify(initialPedigreeNode)))
+        this.currentNodeID = this.probandID
     }
 })
 /*proband.name = prompt("What is your name?")
