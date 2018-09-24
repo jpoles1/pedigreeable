@@ -36,10 +36,57 @@
                                 solo
                                 required
                             ></v-text-field>
-                            <v-btn small color="primary" :disabled="!phaseValid[1]" @click="phase++;">Next</v-btn>
+                            <v-btn small color="primary" :disabled="!phaseValid[1]" @click="nextNode()">Next</v-btn>
                         </v-form>
-                        <v-form id="proband-children"  v-model="phaseValid[2]" v-if="phase==2">
-                            <h2>Let's talk about: {{pedigreeNodes[currentNodeID].name}}</h2>
+                        <v-form id="proband-parents"  v-model="phaseValid[2]" v-if="phase==2">
+                            <h2>Let's talk about your parents!</h2>
+                            <hr>
+                            <v-tabs
+                                color="cyan"
+                                dark
+                                slider-color="yellow"
+                            >
+                                <v-tab
+                                    v-for="parentType in ['Mother', 'Father']"
+                                    :key="parentType"
+                                    ripple
+                                >
+                                    {{parentType}}
+                                </v-tab>
+                                <v-tab-item
+                                    v-for="parentType in ['Mother', 'Father']"
+                                    :key="parentType"
+                                >
+                                    <v-card flat>
+                                        <v-text-field
+                                            v-model="pedigreeNodes[partnerID].name"
+                                            label="What is the partner's name?"
+                                            @keydown="renderTree"
+                                            :rules="[() => pedigreeNodes[partnerID].name.length > 0 || 'Required field']"
+                                            solo
+                                            required
+                                        ></v-text-field>
+                                        <v-select
+                                            v-model="pedigreeNodes[partnerID].sex"
+                                            :items="['Male', 'Female', 'Other']"
+                                            label="What is your partner's sex assigned at birth?"
+                                            solo
+                                            required
+                                        ></v-select> 
+                                        <v-text-field
+                                            type="number"
+                                            v-model="pedigreeNodes[partnerID].yob"
+                                            label="What is the partner's year of birth?"
+                                            :rules="[() => !isNaN(parseInt(pedigreeNodes[partnerID].yob)) || 'Invalid year (yyyy)']"
+                                            solo
+                                            required
+                                        ></v-text-field>
+                                    </v-card>
+                                </v-tab-item>
+                            </v-tabs>
+                        </v-form>
+                        <v-form id="proband-children"  v-model="phaseValid[3]" v-if="phase==3">
+                            <h2>Let's talk about {{pedigreeNodes[currentNodeID].name}}!</h2>
                             <hr>
                             <v-text-field
                                 type="number"
@@ -137,7 +184,7 @@
                                     </v-card>
                                 </v-tab-item>
                             </v-tabs>
-                            <v-btn small color="primary" :disabled="!phaseValid[2]" @click="nextNode()">Next</v-btn>
+                            <v-btn small color="primary" :disabled="!phaseValid[3]" @click="nextNode()">Next</v-btn>
                         </v-form>
                     </div>
                 </div>

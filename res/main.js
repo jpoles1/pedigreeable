@@ -47,6 +47,18 @@ var app = new Vue({
     },
     methods: {
         nextNode: function(){
+            if(this.phase == 1){
+                var probandNode = this.pedigreeNodes[this.probandID]
+                probandNode.parents = [ObjectID().str, ObjectID().str]
+                this.$set(this.pedigreeNodes, this.probandID, probandNode)
+                var probandMotherNode = JSON.parse(JSON.stringify(initialPedigreeNode))
+                probandMotherNode.sex = "Female"
+                this.$set(this.pedigreeNodes, this.pedigreeNodes[this.probandID].parents[0], probandMotherNode)
+                var probandFatherNode = JSON.parse(JSON.stringify(initialPedigreeNode))
+                probandFatherNode.sex = "Male"
+                this.$set(this.pedigreeNodes, this.pedigreeNodes[this.probandID].parents[1], probandFatherNode)
+                this.phase = 2;
+            }
             if(this.phase == 2){
                 var nextNodeInfo = Object.entries(this.pedigreeNodes).find(([nodeID, nodeData]) => {
                     if(nodeData.nPartners == undefined){
@@ -57,7 +69,7 @@ var app = new Vue({
                     this.currentNodeID = nextNodeInfo[0]
                 }
                 else { 
-                    this.phase++;
+                    this.phase = 3;
                 }
             }
         },
@@ -163,7 +175,8 @@ var app = new Vue({
         }
     },
     mounted: function(){
-        this.$set(this.pedigreeNodes, this.probandID, JSON.parse(JSON.stringify(initialPedigreeNode)))
+        var probandNode = JSON.parse(JSON.stringify(initialPedigreeNode))
+        this.$set(this.pedigreeNodes, this.probandID, probandNode)
         this.currentNodeID = this.probandID
     }
 })
