@@ -16,6 +16,13 @@ html {
     width: 44%;
     height: 100%;
     overflow-y: auto;
+    padding: 10px;
+}
+h2{
+    text-align: center;
+}
+hr{
+    margin: 15px 0; 
 }
 .linage {
     fill: none;

@@ -11,8 +11,9 @@
                 <div id="app-container">
                     <div id="treeMap"></div>
                     <div id="treeForm" v-if="pedigreeNodes[probandID]">
-                        <br><br>
                         <v-form id="proband-info" v-model="phaseValid[1]" v-if="phase==1">
+                            <h2>Let's get to know you and your family!</h2>
+                            <hr>        
                             <v-text-field
                                 v-model="pedigreeNodes[probandID].name"
                                 label="What is your name?"
@@ -37,12 +38,13 @@
                             ></v-text-field>
                             <v-btn small color="primary" :disabled="!phaseValid[1]" @click="phase++;">Next</v-btn>
                         </v-form>
-                        <v-form id="proband-children" v-if="phase==2">
-                            Subject: {{pedigreeNodes[currentNodeID].name}}
+                        <v-form id="proband-children"  v-model="phaseValid[2]" v-if="phase==2">
+                            <h2>Let's talk about: {{pedigreeNodes[currentNodeID].name}}</h2>
+                            <hr>
                             <v-text-field
                                 type="number"
                                 v-model="pedigreeNodes[currentNodeID].nPartners"
-                                label="With how many partners have you had children?"
+                                :label="'With how many partners has ' + pedigreeNodes[currentNodeID].name + ' had children?'"
                                 :rules="[() => !isNaN(parseInt(nProbandParnters)) || 'Invalid number of reproductive partners.']"
                                 solo
                                 required
@@ -90,7 +92,7 @@
                                         <v-text-field
                                             type="number"
                                             v-model="pedigreeNodes[partnerID].nChildren"
-                                            label="With how many children do you have with this partner?"
+                                            :label="'How many children does ' + pedigreeNodes[currentNodeID].name + ' have with this partner?'"
                                             @keydown="renderTree"
                                             :rules="[() => !isNaN(pedigreeNodes[partnerID].nChildren) || 'Invalid number of children.']"
                                             solo
@@ -135,7 +137,7 @@
                                     </v-card>
                                 </v-tab-item>
                             </v-tabs>
-                            <v-btn small color="primary" :disabled="!phaseValid[1]" @click="nextNode()">Next</v-btn>
+                            <v-btn small color="primary" :disabled="!phaseValid[2]" @click="nextNode()">Next</v-btn>
                         </v-form>
                     </div>
                 </div>

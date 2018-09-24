@@ -2,7 +2,7 @@ var currentYear = (new Date()).getFullYear()
 var initialPedigreeNode = {
     name: "",
     sex: "",
-    yob: currentYear,
+    yob: undefined,
     parents: [],
     nPartners: undefined,
     partners: [],
@@ -78,13 +78,13 @@ var app = new Vue({
                             this.$set(this.pedigreeNodes, nodeData.partners[partnerIndex], partnerData)
                         }
                     })
-                    if(parseInt(nodeData.nPartners) < nodeData.partners.length) {
-                        nodeData.partners.slice(parseInt(nodeData.nPartners)).forEach((partnerID) => {
-                            this.$delete(this.pedigreeNodes, partnerID)
-                        })
-                        nodeData.partners = nodeData.partners.slice(0, parseInt(nodeData.nPartners))
-                        this.$set(this.pedigreeNodes, nodeID, nodeData)
-                    }
+                }
+                if(parseInt(nodeData.nPartners) < nodeData.partners.length) {
+                    nodeData.partners.slice(parseInt(nodeData.nPartners)).forEach((partnerID) => {
+                        this.$delete(this.pedigreeNodes, partnerID)
+                    })
+                    nodeData.partners = nodeData.partners.slice(0, parseInt(nodeData.nPartners))
+                    this.$set(this.pedigreeNodes, nodeID, nodeData)
                 }
                 if(parseInt(nodeData.nChildren) > 0){
                     Array(parseInt(nodeData.nChildren)).fill().forEach((_, childIndex) => {
@@ -98,13 +98,13 @@ var app = new Vue({
                             this.$set(this.pedigreeNodes, nodeData.children[childIndex], childData)
                         }
                     })
-                    if(parseInt(nodeData.nChildren) < nodeData.children.length) {
-                        nodeData.children.slice(parseInt(nodeData.nChildren)).forEach((childID) => {
-                            this.$delete(this.pedigreeNodes, childID)
-                        })
-                        nodeData.children = nodeData.children.slice(0, parseInt(nodeData.nChildren))
-                        this.$set(this.pedigreeNodes, nodeID, nodeData)
-                    }
+                }
+                if(parseInt(nodeData.nChildren) < nodeData.children.length) {
+                    nodeData.children.slice(parseInt(nodeData.nChildren)).forEach((childID) => {
+                        this.$delete(this.pedigreeNodes, childID)
+                    })
+                    nodeData.children = nodeData.children.slice(0, parseInt(nodeData.nChildren))
+                    this.$set(this.pedigreeNodes, nodeID, nodeData)
                 }
             })
         },
