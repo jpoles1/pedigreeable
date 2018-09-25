@@ -39,7 +39,7 @@
                             <v-btn small color="primary" :disabled="!phaseValid[1]" @click="nextNode()">Next</v-btn>
                         </v-form>
                         <v-form id="proband-parents"  v-model="phaseValid[2]" v-if="phase==2">
-                            <h2>Let's talk about your parents!</h2>
+                            <h2>Let's talk about {{pedigreeNodes[currentNodeID].name}}!</h2>
                             <hr>
                             <v-tabs
                                 color="cyan"
@@ -54,20 +54,20 @@
                                     {{parentType}}
                                 </v-tab>
                                 <v-tab-item
-                                    v-for="parentType in ['Mother', 'Father']"
+                                    v-for="(parentType, parentIndex) in ['Mother', 'Father']"
                                     :key="parentType"
                                 >
                                     <v-card flat>
                                         <v-text-field
-                                            v-model="pedigreeNodes[partnerID].name"
+                                            v-model="getParent(parentIndex).name"
                                             label="What is the partner's name?"
                                             @keydown="renderTree"
-                                            :rules="[() => pedigreeNodes[partnerID].name.length > 0 || 'Required field']"
+                                            :rules="[() => getParent(parentIndex).name.length > 0 || 'Required field']"
                                             solo
                                             required
                                         ></v-text-field>
                                         <v-select
-                                            v-model="pedigreeNodes[partnerID].sex"
+                                            v-model="getParent(parentIndex).sex"
                                             :items="['Male', 'Female', 'Other']"
                                             label="What is your partner's sex assigned at birth?"
                                             solo
@@ -75,15 +75,16 @@
                                         ></v-select> 
                                         <v-text-field
                                             type="number"
-                                            v-model="pedigreeNodes[partnerID].yob"
+                                            v-model="getParent(parentIndex).yob"
                                             label="What is the partner's year of birth?"
-                                            :rules="[() => !isNaN(parseInt(pedigreeNodes[partnerID].yob)) || 'Invalid year (yyyy)']"
+                                            :rules="[() => !isNaN(parseInt(getParent(parentIndex).yob)) || 'Invalid year (yyyy)']"
                                             solo
                                             required
                                         ></v-text-field>
                                     </v-card>
                                 </v-tab-item>
                             </v-tabs>
+                            <v-btn small color="primary" :disabled="!phaseValid[2]" @click="nextNode()">Next</v-btn>
                         </v-form>
                         <v-form id="proband-children"  v-model="phaseValid[3]" v-if="phase==3">
                             <h2>Let's talk about {{pedigreeNodes[currentNodeID].name}}!</h2>
@@ -192,10 +193,10 @@
         </div>
         <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
-        <script src="https://d3js.org/d3.v4.js"></script>
-        <script src="node_modules/lodash/lodash.js"></script>
-        <script src="node_modules/d3-dtree/dist/dTree.min.js"></script>
+        <script src="https://d3js.org/d3.v5.js"></script>
+        <script src="https://unpkg.com/d3-dag@0.1.2/dist/d3-dag.min.js"></script>
         <script src="res/objectid.js"></script>
+        <script src="res/dag.js"></script>
         <script src="res/main.js"></script>
     </body>
 </html>

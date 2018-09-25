@@ -23,14 +23,15 @@ var app = new Vue({
             treeOpts: {
                 target: "#treeMap",
                 callbacks: {
-                    textRenderer: function (name, extra, textClass) {
-                        if (extra && extra.yob) {
-                            var yob = parseInt(extra.yob)
+                    renderText: function (d) {
+                        var nodeText = d.data.name
+                        if (d.data && d.data.yob) {
+                            var yob = parseInt(d.data.yob)
                             if (!isNaN(yob)) {
-                                name = name + "<br><span class='age'>(Age " + (currentYear - yob) + ")</span>";
+                                nodeText = nodeText + "<br><span class='age'>Age " + (currentYear - yob) + "</span>";
                             }
                         }
-                        return "<p align='center' class='" + textClass + "'>" + name + "</p>";
+                        return "<div style='text-align: center'>" + nodeText + "</div>";
                     }
                 }
             }
@@ -46,20 +47,41 @@ var app = new Vue({
         },
     },
     methods: {
+        getParent: function(parentIndex){
+            return this.pedigreeNodes[this.pedigreeNodes[this.pedigreeNodes[this.currentNodeID].parents[0]].parents[parentIndex]]
+        },
         nextNode: function(){
             if(this.phase == 1){
-                var probandNode = this.pedigreeNodes[this.probandID]
-                probandNode.parents = [ObjectID().str, ObjectID().str]
-                this.$set(this.pedigreeNodes, this.probandID, probandNode)
-                var probandMotherNode = JSON.parse(JSON.stringify(initialPedigreeNode))
-                probandMotherNode.sex = "Female"
-                this.$set(this.pedigreeNodes, this.pedigreeNodes[this.probandID].parents[0], probandMotherNode)
-                var probandFatherNode = JSON.parse(JSON.stringify(initialPedigreeNode))
-                probandFatherNode.sex = "Male"
-                this.$set(this.pedigreeNodes, this.pedigreeNodes[this.probandID].parents[1], probandFatherNode)
                 this.phase = 2;
             }
             if(this.phase == 2){
+                var nextNodeInfo = Object.entries(this.pedigreeNodes).find(([nodeID, nodeData]) => {
+                    if(nodeData.parents.length == 0){
+                        return true
+                    }
+                })
+                if(nextNodeInfo != undefined) {
+                    this.currentNodeID = nextNodeInfo[0]
+                    var currentNode = this.pedigreeNodes[this.currentNodeID]
+                    var reproductionNode = JSON.parse(JSON.stringify(initialPedigreeNode))
+                    reproductionNode.name = ""
+                    reproductionNode.parents = [ObjectID().str, ObjectID().str]
+                    var probandMotherNode = JSON.parse(JSON.stringify(initialPedigreeNode))
+                    probandMotherNode.sex = "Female"
+                    this.$set(this.pedigreeNodes, reproductionNode.parents[0], probandMotherNode)
+                    var probandFatherNode = JSON.parse(JSON.stringify(initialPedigreeNode))
+                    probandFatherNode.sex = "Male"
+                    currentNode.parents = [ObjectID().str]
+                    this.$set(this.pedigreeNodes, reproductionNode.parents[1], probandFatherNode)
+                    this.$set(this.pedigreeNodes, currentNode.parents[0], reproductionNode)
+                    this.$set(this.pedigreeNodes, this.currentNodeID, currentNode)
+                }
+                else { 
+                    this.phase = 3;
+                }
+                return
+            }
+            else if(this.phase == 3){
                 var nextNodeInfo = Object.entries(this.pedigreeNodes).find(([nodeID, nodeData]) => {
                     if(nodeData.nPartners == undefined){
                         return true
@@ -69,7 +91,7 @@ var app = new Vue({
                     this.currentNodeID = nextNodeInfo[0]
                 }
                 else { 
-                    this.phase = 3;
+                    this.phase = 4;
                 }
             }
         },
@@ -86,7 +108,7 @@ var app = new Vue({
                             //Non-related individuals will only get a single partner relating them back to the blood relative
                             partnerData.partners = [nodeID]
                             partnerData.nPartners = 1
-                            partnerData.parents = ["non-blood"]
+                            partnerData.parents = []
                             this.$set(this.pedigreeNodes, nodeData.partners[partnerIndex], partnerData)
                         }
                     })
@@ -122,7 +144,7 @@ var app = new Vue({
         },
         renderTree: function() { 
             document.querySelector(this.treeOpts.target).innerHTML = ""
-            dTree.init(this.generateTree(), this.treeOpts);
+            renderDAG(this.generateTree(), this.treeOpts)
         },
         generateChildren: function(partnerData) {
             var children = []
@@ -157,18 +179,13 @@ var app = new Vue({
             return marriages
         },
         generateTree: function () {
-            var familyData = []
-            Object.values(this.pedigreeNodes).forEach((nodeData) => {
-                if(nodeData.parents.length == 0){
-                    var topLevelNode = {
-                        name: nodeData.name,
-                        class: "node " + nodeData.sex.toLowerCase(),
-                        extra: {
-                            yob: nodeData.yob
-                        },
-                        marriages: this.generateMarriages(nodeData)
-                    }
-                    familyData.push(topLevelNode)
+            var familyData = Object.entries(this.pedigreeNodes).map(([nodeID, nodeData]) => {
+                return {
+                    id: nodeID,
+                    name: nodeData.name,
+                    sex: nodeData.sex,
+                    yob: nodeData.yob,
+                    parentIds: nodeData.parents,
                 }
             })
             return familyData
