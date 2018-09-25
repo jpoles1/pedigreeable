@@ -1,10 +1,11 @@
 var currentYear = (new Date()).getFullYear()
 var initialPedigreeNode = {
-    name: "",
+    name: "J",
     sex: "",
-    yob: undefined,
+    yob: 1995,
     generation: 0,
     parents: [],
+    reproNodes: [],
     nPartners: undefined,
     partners: [],
     nChildren: undefined,
@@ -23,7 +24,7 @@ var app = new Vue({
             pedigreeNodes: {},
             treeOpts: {
                 target: "#treeMap",
-                maxGen: 2,
+                maxGen: 0,
                 callbacks: {
                     renderText: function (d) {
                         var nodeText = d.data.name
@@ -67,21 +68,24 @@ var app = new Vue({
                     this.currentNodeID = nextNodeInfo[0]
                     var currentNode = this.pedigreeNodes[this.currentNodeID]
 
+                    var reproductionNodeID = ObjectID().str
                     var reproductionNode = JSON.parse(JSON.stringify(initialPedigreeNode))
                     reproductionNode.name = ""
                     
                     reproductionNode.parents = [ObjectID().str, ObjectID().str]
                     var probandMotherNode = JSON.parse(JSON.stringify(initialPedigreeNode))
                     probandMotherNode.sex = "Female"
+                    probandMotherNode.reproNodes.push(reproductionNodeID)
                     probandMotherNode.generation = currentNode.generation + 1
                     this.$set(this.pedigreeNodes, reproductionNode.parents[0], probandMotherNode)
 
                     var probandFatherNode = JSON.parse(JSON.stringify(initialPedigreeNode))
                     probandFatherNode.sex = "Male"
+                    probandFatherNode.reproNodes.push(reproductionNodeID)
                     probandFatherNode.generation = currentNode.generation + 1
                     this.$set(this.pedigreeNodes, reproductionNode.parents[1], probandFatherNode)
 
-                    currentNode.parents = [ObjectID().str]
+                    currentNode.parents = [reproductionNodeID]
                     this.$set(this.pedigreeNodes, currentNode.parents[0], reproductionNode)
                     this.$set(this.pedigreeNodes, this.currentNodeID, currentNode)
                 }
@@ -109,13 +113,23 @@ var app = new Vue({
                 if(parseInt(nodeData.nPartners) > 0){
                     Array(parseInt(nodeData.nPartners)).fill().forEach((_, partnerIndex) => {
                         if(!nodeData.partners[partnerIndex]){
+                            var reproductionNodeID = ObjectID().str
                             nodeData.partners[partnerIndex] = ObjectID().str
+                            nodeData.reproNodes.push(reproductionNodeID)
                             this.$set(this.pedigreeNodes, nodeID, nodeData)
+                            
+                            
+                            var reproductionNode = JSON.parse(JSON.stringify(initialPedigreeNode))
+                            reproductionNode.name = ""
+                            reproductionNode.parents = [nodeID, nodeData.partners[partnerIndex]]
+                            this.$set(this.pedigreeNodes, reproductionNodeID, reproductionNode)
+
+        
                             var partnerData = JSON.parse(JSON.stringify(initialPedigreeNode))
                             if(nodeData.sex == "Male") partnerData.sex = "Female"
                             if(nodeData.sex == "Female") partnerData.sex = "Male"
-                            //Non-related individuals will only get a single partner relating them back to the blood relative
                             partnerData.partners = [nodeID]
+                            partnerData.reproNodes.push(reproductionNodeID)
                             partnerData.nPartners = 1
                             partnerData.parents = []
                             this.$set(this.pedigreeNodes, nodeData.partners[partnerIndex], partnerData)
@@ -135,9 +149,9 @@ var app = new Vue({
                             nodeData.children[childIndex] = ObjectID().str
                             this.$set(this.pedigreeNodes, nodeID, nodeData)
                             var childData = JSON.parse(JSON.stringify(initialPedigreeNode))
-                            //Children will get their parent from the current non-blood node
-                            //TODO: Add other parent id somehow
-                            childData.parents = [nodeID]
+                            childData.generation = nodeData.generation + 1
+                            //TODO: verify below logic is correct
+                            childData.parents = [this.pedigreeNodes[nodeID].reproNodes[0]]
                             this.$set(this.pedigreeNodes, nodeData.children[childIndex], childData)
                         }
                     })
