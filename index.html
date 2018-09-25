@@ -60,7 +60,7 @@
                                     <v-card flat>
                                         <v-text-field
                                             v-model="getParent(parentIndex).name"
-                                            label="What is the partner's name?"
+                                            label="Parent's name"
                                             @keydown="renderTree"
                                             :rules="[() => getParent(parentIndex).name.length > 0 || 'Required field']"
                                             solo
@@ -69,14 +69,14 @@
                                         <v-select
                                             v-model="getParent(parentIndex).sex"
                                             :items="['Male', 'Female', 'Other']"
-                                            label="What is your partner's sex assigned at birth?"
+                                            label="Parent's assigned at birth"
                                             solo
                                             required
                                         ></v-select> 
                                         <v-text-field
                                             type="number"
                                             v-model="getParent(parentIndex).yob"
-                                            label="What is the partner's year of birth?"
+                                            label="Parent's year of birth"
                                             :rules="[() => !isNaN(parseInt(getParent(parentIndex).yob)) || 'Invalid year (yyyy)']"
                                             solo
                                             required
@@ -116,7 +116,7 @@
                                     <v-card flat>
                                         <v-text-field
                                             v-model="pedigreeNodes[partnerID].name"
-                                            label="What is the partner's name?"
+                                            label="Partner's name"
                                             @keydown="renderTree"
                                             :rules="[() => pedigreeNodes[partnerID].name.length > 0 || 'Required field']"
                                             solo
@@ -125,14 +125,14 @@
                                         <v-select
                                             v-model="pedigreeNodes[partnerID].sex"
                                             :items="['Male', 'Female', 'Other']"
-                                            label="What is your partner's sex assigned at birth?"
+                                            label="Partner's sex assigned at birth"
                                             solo
                                             required
                                         ></v-select> 
                                         <v-text-field
                                             type="number"
                                             v-model="pedigreeNodes[partnerID].yob"
-                                            label="What is the partner's year of birth?"
+                                            label="Partner's year of birth"
                                             :rules="[() => !isNaN(parseInt(pedigreeNodes[partnerID].yob)) || 'Invalid year (yyyy)']"
                                             solo
                                             required
@@ -157,7 +157,7 @@
                                                     <v-card>
                                                         <v-text-field
                                                             v-model="pedigreeNodes[childID].name"
-                                                            label="What is the child's name?"
+                                                            label="Child's name"
                                                             @keydown="renderTree"
                                                             :rules="[() => pedigreeNodes[childID].name.length > 0 || 'Required field']"
                                                             solo
@@ -166,14 +166,14 @@
                                                         <v-select
                                                             v-model="pedigreeNodes[childID].sex"
                                                             :items="['Male', 'Female', 'Other']"
-                                                            label="What is the child's sex assigned at birth?"
+                                                            label="Child's sex assigned at birth?"
                                                             solo
                                                             required
                                                         ></v-select> 
                                                         <v-text-field
                                                             type="number"
                                                             v-model="pedigreeNodes[childID].yob"
-                                                            label="What is the child's year of birth?"
+                                                            label="Child's year of birth"
                                                             :rules="[() => !isNaN(parseInt(pedigreeNodes[childID].yob)) || 'Invalid year (yyyy)']"
                                                             solo
                                                             required

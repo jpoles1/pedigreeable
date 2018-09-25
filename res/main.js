@@ -3,6 +3,7 @@ var initialPedigreeNode = {
     name: "",
     sex: "",
     yob: undefined,
+    generation: 0,
     parents: [],
     nPartners: undefined,
     partners: [],
@@ -22,6 +23,7 @@ var app = new Vue({
             pedigreeNodes: {},
             treeOpts: {
                 target: "#treeMap",
+                maxGen: 2,
                 callbacks: {
                     renderText: function (d) {
                         var nodeText = d.data.name
@@ -56,27 +58,34 @@ var app = new Vue({
             }
             if(this.phase == 2){
                 var nextNodeInfo = Object.entries(this.pedigreeNodes).find(([nodeID, nodeData]) => {
-                    if(nodeData.parents.length == 0){
+                    if(nodeData.parents.length == 0 && nodeData.generation < this.treeOpts.maxGen ){
+                        console.log(nodeData)
                         return true
                     }
                 })
                 if(nextNodeInfo != undefined) {
                     this.currentNodeID = nextNodeInfo[0]
                     var currentNode = this.pedigreeNodes[this.currentNodeID]
+
                     var reproductionNode = JSON.parse(JSON.stringify(initialPedigreeNode))
                     reproductionNode.name = ""
+                    
                     reproductionNode.parents = [ObjectID().str, ObjectID().str]
                     var probandMotherNode = JSON.parse(JSON.stringify(initialPedigreeNode))
                     probandMotherNode.sex = "Female"
+                    probandMotherNode.generation = currentNode.generation + 1
                     this.$set(this.pedigreeNodes, reproductionNode.parents[0], probandMotherNode)
+
                     var probandFatherNode = JSON.parse(JSON.stringify(initialPedigreeNode))
                     probandFatherNode.sex = "Male"
-                    currentNode.parents = [ObjectID().str]
+                    probandFatherNode.generation = currentNode.generation + 1
                     this.$set(this.pedigreeNodes, reproductionNode.parents[1], probandFatherNode)
+
+                    currentNode.parents = [ObjectID().str]
                     this.$set(this.pedigreeNodes, currentNode.parents[0], reproductionNode)
                     this.$set(this.pedigreeNodes, this.currentNodeID, currentNode)
                 }
-                else { 
+                else {
                     this.phase = 3;
                 }
                 return
