@@ -173,38 +173,6 @@ var app = new Vue({
             document.querySelector(this.treeOpts.target).innerHTML = ""
             renderDAG(this.generateTree(), this.treeOpts)
         },
-        generateChildren: function(partnerData) {
-            var children = []
-            partnerData.children.forEach((childID) => {
-                var childData = this.pedigreeNodes[childID]
-                children.push({
-                    name: childData.name,
-                    class: "node " + childData.sex.toLowerCase(),
-                    extra: {
-                        yob: childData.yob
-                    },
-                    marriages: this.generateMarriages(childData)
-                })
-            })
-            return children
-        },
-        generateMarriages: function(nodeData) {
-            var marriages = []
-            nodeData.partners.forEach((partnerID) => {
-                var partnerData = this.pedigreeNodes[partnerID]
-                marriages.push({
-                    spouse: {
-                        name: partnerData.name,
-                        class: "node " + partnerData.sex.toLowerCase(),
-                        extra: {
-                            yob: partnerData.yob
-                        },
-                    },
-                    children: this.generateChildren(partnerData)
-                })
-            })
-            return marriages
-        },
         generateTree: function () {
             var familyData = Object.entries(this.pedigreeNodes).map(([nodeID, nodeData]) => {
                 return {
