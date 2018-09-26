@@ -96,7 +96,7 @@ var app = new Vue({
             }
             else if(this.phase == 3){
                 var nextNodeInfo = Object.entries(this.pedigreeNodes).find(([nodeID, nodeData]) => {
-                    if(nodeData.nPartners == undefined){
+                    if(nodeData.nPartners == undefined && name != ""){
                         return true
                     }
                 })
@@ -109,6 +109,8 @@ var app = new Vue({
             }
         },
         updatePedigree: function(){
+            var updatedPedigree = this.pedigreeNodes
+            //Update missing/extra partners
             Object.entries(this.pedigreeNodes).forEach(([nodeID, nodeData]) => {
                 if(parseInt(nodeData.nPartners) > 0){
                     Array(parseInt(nodeData.nPartners)).fill().forEach((_, partnerIndex) => {
@@ -116,13 +118,13 @@ var app = new Vue({
                             var reproductionNodeID = ObjectID().str
                             nodeData.partners[partnerIndex] = ObjectID().str
                             nodeData.reproNodes.push(reproductionNodeID)
-                            this.$set(this.pedigreeNodes, nodeID, nodeData)
+                            this.$set(updatedPedigree, nodeID, nodeData)
                             
                             
                             var reproductionNode = JSON.parse(JSON.stringify(initialPedigreeNode))
                             reproductionNode.name = ""
                             reproductionNode.parents = [nodeID, nodeData.partners[partnerIndex]]
-                            this.$set(this.pedigreeNodes, reproductionNodeID, reproductionNode)
+                            this.$set(updatedPedigree, reproductionNodeID, reproductionNode)
 
         
                             var partnerData = JSON.parse(JSON.stringify(initialPedigreeNode))
@@ -132,38 +134,40 @@ var app = new Vue({
                             partnerData.reproNodes.push(reproductionNodeID)
                             partnerData.nPartners = 1
                             partnerData.parents = []
-                            this.$set(this.pedigreeNodes, nodeData.partners[partnerIndex], partnerData)
+                            this.$set(updatedPedigree, nodeData.partners[partnerIndex], partnerData)
                         }
                     })
                 }
                 if(parseInt(nodeData.nPartners) < nodeData.partners.length) {
                     nodeData.partners.slice(parseInt(nodeData.nPartners)).forEach((partnerID) => {
-                        this.$delete(this.pedigreeNodes, partnerID)
+                        this.$delete(updatedPedigree, partnerID)
                     })
                     nodeData.partners = nodeData.partners.slice(0, parseInt(nodeData.nPartners))
-                    this.$set(this.pedigreeNodes, nodeID, nodeData)
+                    this.$set(updatedPedigree, nodeID, nodeData)
                 }
+                //Update missing/extra children
                 if(parseInt(nodeData.nChildren) > 0){
                     Array(parseInt(nodeData.nChildren)).fill().forEach((_, childIndex) => {
                         if(!nodeData.children[childIndex]){
                             nodeData.children[childIndex] = ObjectID().str
-                            this.$set(this.pedigreeNodes, nodeID, nodeData)
+                            this.$set(updatedPedigree, nodeID, nodeData)
                             var childData = JSON.parse(JSON.stringify(initialPedigreeNode))
                             childData.generation = nodeData.generation + 1
                             //TODO: verify below logic is correct
                             childData.parents = [this.pedigreeNodes[nodeID].reproNodes[0]]
-                            this.$set(this.pedigreeNodes, nodeData.children[childIndex], childData)
+                            this.$set(updatedPedigree, nodeData.children[childIndex], childData)
                         }
                     })
                 }
                 if(parseInt(nodeData.nChildren) < nodeData.children.length) {
                     nodeData.children.slice(parseInt(nodeData.nChildren)).forEach((childID) => {
-                        this.$delete(this.pedigreeNodes, childID)
+                        this.$delete(updatedPedigree, childID)
                     })
                     nodeData.children = nodeData.children.slice(0, parseInt(nodeData.nChildren))
-                    this.$set(this.pedigreeNodes, nodeID, nodeData)
+                    this.$set(updatedPedigree, nodeID, nodeData)
                 }
             })
+            this.pedigreeNodes = updatedPedigree
         },
         renderTree: function() { 
             document.querySelector(this.treeOpts.target).innerHTML = ""
@@ -220,7 +224,3 @@ var app = new Vue({
         this.currentNodeID = this.probandID
     }
 })
-/*proband.name = prompt("What is your name?")
-proband.sex = prompt("What is your sex assigned at birth (male/female)?")
-proband.sex = ["male", "female"].indexOf(proband.sex) != -1 ? proband.sex : "other"
-proband.yob = prompt("What year were you born?")*/
