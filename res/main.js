@@ -177,6 +177,7 @@ var app = new Vue({
             var familyData = Object.entries(this.pedigreeNodes).map(([nodeID, nodeData]) => {
                 return {
                     id: nodeID,
+                    active: nodeID == this.currentNodeID,
                     name: nodeData.name,
                     sex: nodeData.sex,
                     yob: nodeData.yob,

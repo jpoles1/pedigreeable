@@ -3,6 +3,7 @@ function renderDAG(dagData, treeOpts) {
     var defaultOpts = {
         target: "#treeMap",
         margin: 200,
+        activeColor: "green",
         callbacks: {
             renderText: function(d){
                 return d.id
@@ -79,14 +80,14 @@ function renderDAG(dagData, treeOpts) {
         .append('circle')
         .attr('r', nodeSize)
         .attr('fill', 'white')
-        .attr('stroke', 'black')
+        .attr('stroke', (d) => d.data.active ? treeOpts.activeColor : 'black')
 
     pedigreeNodes.filter((d) => d.data.sex == "Male")
         .append('rect')
         .attr('width', nodeSize * 2)
         .attr('height', nodeSize * 2)
         .attr('fill', 'white')
-        .attr('stroke', 'black')
+        .attr('stroke', (d) => d.data.active ? treeOpts.activeColor : 'black')
         .attr('transform', "translate(-" + nodeSize + ", -" + nodeSize + ")");
 
     pedigreeNodes.filter((d) => d.data.sex != "Male" && d.data.sex != "Female")
@@ -94,7 +95,7 @@ function renderDAG(dagData, treeOpts) {
         .attr('width', nodeSize * 2)
         .attr('height', nodeSize * 2)
         .attr('fill', 'white')
-        .attr('stroke', 'black')
+        .attr('stroke', (d) => d.data.active ? treeOpts.activeColor : 'black')
         .attr('transform', "rotate(45) translate(-" + nodeSize + ", -" + nodeSize + ")");
 
 
