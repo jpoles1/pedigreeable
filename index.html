@@ -92,8 +92,9 @@
                                 type="number"
                                 v-model="pedigreeNodes[currentNodeID].nPartners"
                                 :label="'With how many partners has ' + pedigreeNodes[currentNodeID].name + ' had children?'"
-                                :rules="[() => !isNaN(parseInt(pedigreeNodes[currentNodeID].nPartners)) || 'Invalid number of reproductive partners.']"
+                                :rules="[() => (!isNaN(parseInt(pedigreeNodes[currentNodeID].nPartners)) && parseInt(pedigreeNodes[currentNodeID].nPartners) >= 0) || 'Invalid number of reproductive partners.']"
                                 solo
+                                min=0
                                 required
                             ></v-text-field>
                             <v-tabs
@@ -139,7 +140,8 @@
                                             type="number"
                                             v-model="pedigreeNodes[partnerID].nChildren"
                                             :label="'How many children does ' + pedigreeNodes[currentNodeID].name + ' have with this partner?'"
-                                            :rules="[() => !isNaN(pedigreeNodes[partnerID].nChildren) || 'Invalid number of children.']"
+                                            :rules="[() => (!isNaN(pedigreeNodes[partnerID].nChildren) && parseInt(pedigreeNodes[partnerID].nChildren) >= 0) || 'Invalid number of children.']"
+                                            min=0
                                             solo
                                             required
                                         ></v-text-field>
@@ -181,7 +183,7 @@
                                     </v-card>
                                 </v-tab-item>
                             </v-tabs>
-                            <v-btn small color="primary" :disabled="!phaseValid[3]" @click="nextNode()">Next</v-btn>
+                            <v-btn small color="primary" :disabled="!phaseValid[3]" @click="pedigreeNodes[currentNodeID].completedPartners = true; nextNode()">Next</v-btn>
                         </v-form>
                     </div>
                 </div>

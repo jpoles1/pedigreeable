@@ -24,7 +24,7 @@ var app = new Vue({
             pedigreeNodes: {},
             treeOpts: {
                 target: "#treeMap",
-                maxGen: 0,
+                maxGen: 1,
                 callbacks: {
                     renderText: function (d) {
                         var nodeText = d.data.name
@@ -59,10 +59,7 @@ var app = new Vue({
             }
             if(this.phase == 2){
                 var nextNodeInfo = Object.entries(this.pedigreeNodes).find(([nodeID, nodeData]) => {
-                    if(nodeData.parents.length == 0 && nodeData.generation < this.treeOpts.maxGen ){
-                        console.log(nodeData)
-                        return true
-                    }
+                    return nodeData.parents.length == 0 && nodeData.generation < this.treeOpts.maxGen
                 })
                 if(nextNodeInfo != undefined) {
                     this.currentNodeID = nextNodeInfo[0]
@@ -138,7 +135,7 @@ var app = new Vue({
                         }
                     })
                 }
-                if(parseInt(nodeData.nPartners) < nodeData.partners.length) {
+                if(parseInt(nodeData.nPartners) >= 0 && parseInt(nodeData.nPartners) < nodeData.partners.length) {
                     nodeData.partners.slice(parseInt(nodeData.nPartners)).forEach((partnerID) => {
                         this.$delete(updatedPedigree, partnerID)
                     })
@@ -159,7 +156,7 @@ var app = new Vue({
                         }
                     })
                 }
-                if(parseInt(nodeData.nChildren) < nodeData.children.length) {
+                if(parseInt(nodeData.nChildren) >= 0 && parseInt(nodeData.nChildren) < nodeData.children.length) {
                     nodeData.children.slice(parseInt(nodeData.nChildren)).forEach((childID) => {
                         this.$delete(updatedPedigree, childID)
                     })
