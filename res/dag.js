@@ -14,7 +14,7 @@ function renderDAG(dagData, treeOpts) {
     treeOpts = Object.assign(defaultOpts, treeOpts)
     const dag = d3.dratify()(dagData)
 
-    d3.sugiyama().coord(d3.coordVert())(dag);
+    d3.sugiyama().decross(d3.decrossTwoLayer()).coord(d3.coordVert())(dag);
 
     const links = dag.links()
     const descendants = dag.descendants();
