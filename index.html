@@ -92,9 +92,9 @@
                                 type="number"
                                 v-model="pedigreeNodes[currentNodeID].nPartners"
                                 :label="'With how many partners has ' + pedigreeNodes[currentNodeID].name + ' had children?'"
-                                :rules="[() => (!isNaN(parseInt(pedigreeNodes[currentNodeID].nPartners)) && parseInt(pedigreeNodes[currentNodeID].nPartners) >= 0) || 'Invalid number of reproductive partners.']"
+                                :rules="[() => (!isNaN(parseInt(pedigreeNodes[currentNodeID].nPartners)) && parseInt(pedigreeNodes[currentNodeID].nPartners) >= (pedigreeNodes[currentNodeID].probandAncestor ? 1 : 0)) || 'Invalid number of reproductive partners.']"
                                 solo
-                                min=0
+                                :min="pedigreeNodes[currentNodeID].probandAncestor ? 1 : 0"
                                 required
                             ></v-text-field>
                             <v-tabs

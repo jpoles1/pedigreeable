@@ -1,13 +1,15 @@
 var currentYear = (new Date()).getFullYear()
 var initialPedigreeNode = {
-    name: "J",
+    name: "",
     sex: "",
-    yob: 1995,
+    yob: undefined,
     generation: 0,
     parents: [],
     reproNodes: [],
     nPartners: undefined,
     partners: [],
+    completedPartners: false,
+    probandAncestor: false,
     nChildren: undefined,
     children: [],
 }
@@ -24,7 +26,7 @@ var app = new Vue({
             pedigreeNodes: {},
             treeOpts: {
                 target: "#treeMap",
-                maxGen: 1,
+                maxGen: 2,
                 callbacks: {
                     renderText: function (d) {
                         var nodeText = d.data.name
@@ -68,18 +70,28 @@ var app = new Vue({
                     var reproductionNodeID = ObjectID().str
                     var reproductionNode = JSON.parse(JSON.stringify(initialPedigreeNode))
                     reproductionNode.name = ""
-                    
                     reproductionNode.parents = [ObjectID().str, ObjectID().str]
+                    
                     var probandMotherNode = JSON.parse(JSON.stringify(initialPedigreeNode))
                     probandMotherNode.sex = "Female"
                     probandMotherNode.reproNodes.push(reproductionNodeID)
                     probandMotherNode.generation = currentNode.generation + 1
+                    probandMotherNode.nPartners = 1
+                    probandMotherNode.nChildren = 1
+                    probandMotherNode.children = [this.currentNodeID]
+                    probandMotherNode.partners = [reproductionNode.parents[1]]
+                    probandMotherNode.probandAncestor = true
                     this.$set(this.pedigreeNodes, reproductionNode.parents[0], probandMotherNode)
 
                     var probandFatherNode = JSON.parse(JSON.stringify(initialPedigreeNode))
                     probandFatherNode.sex = "Male"
                     probandFatherNode.reproNodes.push(reproductionNodeID)
                     probandFatherNode.generation = currentNode.generation + 1
+                    probandFatherNode.nPartners = 1
+                    probandFatherNode.nChildren = 1
+                    probandFatherNode.children = [this.currentNodeID]
+                    probandFatherNode.partners = [reproductionNode.parents[0]]
+                    probandFatherNode.probandAncestor = true
                     this.$set(this.pedigreeNodes, reproductionNode.parents[1], probandFatherNode)
 
                     currentNode.parents = [reproductionNodeID]
@@ -89,13 +101,10 @@ var app = new Vue({
                 else {
                     this.phase = 3;
                 }
-                return
             }
-            else if(this.phase == 3){
+            if(this.phase == 3){
                 var nextNodeInfo = Object.entries(this.pedigreeNodes).find(([nodeID, nodeData]) => {
-                    if(nodeData.nPartners == undefined && name != ""){
-                        return true
-                    }
+                    return nodeData.completedPartners == false && nodeData.name != ""
                 })
                 if(nextNodeInfo != undefined) {
                     this.currentNodeID = nextNodeInfo[0]
@@ -107,7 +116,7 @@ var app = new Vue({
         },
         updatePedigree: function(){
             var updatedPedigree = this.pedigreeNodes
-            //Update missing/extra partners
+            //Update missing partners
             Object.entries(this.pedigreeNodes).forEach(([nodeID, nodeData]) => {
                 if(parseInt(nodeData.nPartners) > 0){
                     Array(parseInt(nodeData.nPartners)).fill().forEach((_, partnerIndex) => {
@@ -121,6 +130,7 @@ var app = new Vue({
                             var reproductionNode = JSON.parse(JSON.stringify(initialPedigreeNode))
                             reproductionNode.name = ""
                             reproductionNode.parents = [nodeID, nodeData.partners[partnerIndex]]
+                            reproductionNode.completedPartners = true
                             this.$set(updatedPedigree, reproductionNodeID, reproductionNode)
 
         
@@ -135,14 +145,19 @@ var app = new Vue({
                         }
                     })
                 }
-                if(parseInt(nodeData.nPartners) >= 0 && parseInt(nodeData.nPartners) < nodeData.partners.length) {
+                //Delete extra partners
+                if(parseInt(nodeData.nPartners) >= (nodeData.probandAncestor ? 1 : 0) && parseInt(nodeData.nPartners) < nodeData.partners.length) {
                     nodeData.partners.slice(parseInt(nodeData.nPartners)).forEach((partnerID) => {
                         this.$delete(updatedPedigree, partnerID)
                     })
+                    nodeData.reproNodes.slice(parseInt(nodeData.nPartners)).forEach((reproductionNodeID) => {
+                        this.$delete(updatedPedigree, reproductionNodeID)
+                    })
                     nodeData.partners = nodeData.partners.slice(0, parseInt(nodeData.nPartners))
+                    nodeData.reproNodes = nodeData.reproNodes.slice(0, parseInt(nodeData.nPartners))
                     this.$set(updatedPedigree, nodeID, nodeData)
                 }
-                //Update missing/extra children
+                //Update missing children
                 if(parseInt(nodeData.nChildren) > 0){
                     Array(parseInt(nodeData.nChildren)).fill().forEach((_, childIndex) => {
                         if(!nodeData.children[childIndex]){
@@ -156,6 +171,7 @@ var app = new Vue({
                         }
                     })
                 }
+                //Delete extra children
                 if(parseInt(nodeData.nChildren) >= 0 && parseInt(nodeData.nChildren) < nodeData.children.length) {
                     nodeData.children.slice(parseInt(nodeData.nChildren)).forEach((childID) => {
                         this.$delete(updatedPedigree, childID)
@@ -167,10 +183,13 @@ var app = new Vue({
             this.pedigreeNodes = updatedPedigree
         },
         renderTree: function() { 
+            //Remove prior graph
             document.querySelector(this.treeOpts.target).innerHTML = ""
+            //Regenerate graph
             renderDAG(this.generateTree(), this.treeOpts)
         },
         generateTree: function () {
+            //Iterate over pedigreeNodes and pull out relevant data for graph
             var familyData = Object.entries(this.pedigreeNodes).map(([nodeID, nodeData]) => {
                 return {
                     id: nodeID,
@@ -185,6 +204,7 @@ var app = new Vue({
         }
     },
     mounted: function(){
+        //Create initial node for proband
         var probandNode = JSON.parse(JSON.stringify(initialPedigreeNode))
         this.$set(this.pedigreeNodes, this.probandID, probandNode)
         this.currentNodeID = this.probandID
