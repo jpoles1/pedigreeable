@@ -11,180 +11,231 @@
                 <div id="app-container">
                     <div id="treeMap"></div>
                     <div id="treeForm" v-if="pedigreeNodes[probandID]">
-                        <v-form id="proband-info" v-model="phaseValid[1]" v-if="phase==1">
-                            <h2>Let's get to know you and your family!</h2>
-                            <hr>        
-                            <v-text-field
-                                v-model="pedigreeNodes[probandID].name"
-                                label="What is your name?"
-                                :rules="[() => pedigreeNodes[probandID].name.length > 0 || 'Required field']"
-                                solo
-                                required
-                            ></v-text-field>
-                            <v-select
-                                v-model="pedigreeNodes[probandID].sex"
-                                :items="['Male', 'Female', 'Other']"
-                                label="What is your sex assigned at birth?"
-                                solo
-                                required
-                            ></v-select>                  
-                            <v-text-field
-                                type="number"
-                                v-model="pedigreeNodes[probandID].yob"
-                                label="What year were you born?"
-                                :rules="[() => !isNaN(parseInt(pedigreeNodes[probandID].yob)) || 'Invalid year (yyyy)']"
-                                solo
-                                required
-                            ></v-text-field>
-                            <v-btn small color="primary" :disabled="!phaseValid[1]" @click="nextNode()">Next</v-btn>
-                        </v-form>
-                        <v-form id="proband-parents"  v-model="phaseValid[2]" v-if="phase==2">
-                            <h2>Let's talk about {{pedigreeNodes[currentNodeID].name}}!</h2>
-                            <hr>
-                            <v-tabs
-                                color="cyan"
-                                dark
-                                slider-color="yellow"
-                            >
-                                <v-tab
-                                    v-for="parentType in ['Mother', 'Father']"
-                                    :key="parentType"
-                                    ripple
+                        <v-card>
+                            <v-form id="proband-info" v-model="phaseValid[1]" v-if="phase==1">
+                                <h2>Let's get to know you and your family!</h2>
+                                <hr>        
+                                <v-text-field
+                                    v-model="pedigreeNodes[probandID].name"
+                                    label="What is your name?"
+                                    :rules="[() => pedigreeNodes[probandID].name.length > 0 || 'Required field']"
+                                    solo
+                                    required
+                                ></v-text-field>
+                                <v-select
+                                    v-model="pedigreeNodes[probandID].sex"
+                                    :items="['Male', 'Female', 'Other']"
+                                    label="What is your sex assigned at birth?"
+                                    solo
+                                    required
+                                ></v-select>                  
+                                <v-text-field
+                                    type="number"
+                                    v-model="pedigreeNodes[probandID].yob"
+                                    label="What year were you born?"
+                                    :rules="[() => !isNaN(parseInt(pedigreeNodes[probandID].yob)) || 'Invalid year (yyyy)']"
+                                    solo
+                                    required
+                                ></v-text-field>
+                                <hr>
+                                <v-btn small color="primary" :disabled="!phaseValid[1]" @click="nextNode()">Next</v-btn>
+                            </v-form>
+                            <v-form id="proband-parents"  v-model="phaseValid[2]" v-if="phase==2">
+                                <h2>Let's talk about {{pedigreeNodes[currentNodeID].name}}!</h2>
+                                <hr>
+                                <v-tabs
+                                    color="cyan"
+                                    dark
+                                    slider-color="yellow"
                                 >
-                                    {{parentType}}
-                                </v-tab>
-                                <v-tab-item
-                                    v-for="(parentType, parentIndex) in ['Mother', 'Father']"
-                                    :key="parentType"
+                                    <v-tab
+                                        v-for="parentType in ['Mother', 'Father']"
+                                        :key="parentType"
+                                        ripple
+                                    >
+                                        {{parentType}}
+                                    </v-tab>
+                                    <v-tab-item
+                                        v-for="(parentType, parentIndex) in ['Mother', 'Father']"
+                                        :key="parentType"
+                                    >
+                                        <v-card flat>
+                                            <v-text-field
+                                                v-model="getParent(parentIndex).name"
+                                                label="Parent's name"
+                                                :rules="[() => getParent(parentIndex).name.length > 0 || 'Required field']"
+                                                solo
+                                                required
+                                            ></v-text-field>
+                                            <v-select
+                                                v-model="getParent(parentIndex).sex"
+                                                :items="['Male', 'Female', 'Other']"
+                                                label="Parent's assigned at birth"
+                                                solo
+                                                required
+                                            ></v-select> 
+                                            <v-text-field
+                                                type="number"
+                                                v-model="getParent(parentIndex).yob"
+                                                label="Parent's year of birth"
+                                                :rules="[() => !isNaN(parseInt(getParent(parentIndex).yob)) || 'Invalid year (yyyy)']"
+                                                solo
+                                                required
+                                            ></v-text-field>
+                                        </v-card>
+                                    </v-tab-item>
+                                </v-tabs>
+                                <hr>
+                                <v-btn small color="primary" :disabled="!phaseValid[2]" @click="nextNode()">Next</v-btn>
+                            </v-form>
+                            <v-form id="proband-siblings" v-model="phaseValid[3]" v-if="phase==3">
+                                <h2>Let's talk about your full siblings!</h2>
+                                <hr>
+                                <v-text-field
+                                    type="number"
+                                    v-model="nProbandSiblings"
+                                    label="'How many siblings do you have?"
+                                    :rules="[() => (!isNaN(nProbandSiblings) && parseInt(nProbandSiblings) >= 0) || 'Invalid number of siblings.']"
+                                    solo
+                                    :min="0"
+                                    required
+                                ></v-text-field>
+                                    <v-expansion-panel>
+                                        <v-expansion-panel-content
+                                            v-for="(siblingID, siblingIndex) in pedigreeNodes[probandID].siblings"
+                                            :key="siblingIndex"
+                                        >
+                                            <div slot="header">Sibling {{siblingIndex+1}}</div>
+                                            <v-card>
+                                                <v-text-field
+                                                    v-model="pedigreeNodes[siblingID].name"
+                                                    label="Child's name"
+                                                    :rules="[() => pedigreeNodes[siblingID].name.length > 0 || 'Required field']"
+                                                    solo
+                                                    required
+                                                ></v-text-field>
+                                                <v-select
+                                                    v-model="pedigreeNodes[siblingID].sex"
+                                                    :items="['Male', 'Female', 'Other']"
+                                                    label="Child's sex assigned at birth?"
+                                                    solo
+                                                    required
+                                                ></v-select> 
+                                                <v-text-field
+                                                    type="number"
+                                                    v-model="pedigreeNodes[siblingID].yob"
+                                                    label="Child's year of birth"
+                                                    :rules="[() => !isNaN(parseInt(pedigreeNodes[siblingID].yob)) || 'Invalid year (yyyy)']"
+                                                    solo
+                                                    required
+                                                ></v-text-field>
+                                            </v-card>
+                                        </v-expansion-panel-content>
+                                    </v-expansion-panel>
+                                <hr>
+                                <v-btn small color="primary" :disabled="!phaseValid[3]" @click="nextNode()">Next</v-btn>
+                            </v-form>
+                            <v-form id="proband-children"  v-model="phaseValid[4]" v-if="phase==4">
+                                <h2>Let's talk about {{pedigreeNodes[currentNodeID].name}}!</h2>
+                                <hr>
+                                <v-text-field
+                                    type="number"
+                                    v-model="pedigreeNodes[currentNodeID].nPartners"
+                                    :label="'With how many partners has ' + pedigreeNodes[currentNodeID].name + ' had children?'"
+                                    :rules="[() => (!isNaN(parseInt(pedigreeNodes[currentNodeID].nPartners)) && parseInt(pedigreeNodes[currentNodeID].nPartners) >= (pedigreeNodes[currentNodeID].probandAncestor ? 1 : 0)) || 'Invalid number of reproductive partners.']"
+                                    solo
+                                    :min="pedigreeNodes[currentNodeID].probandAncestor ? 1 : 0"
+                                    required
+                                ></v-text-field>
+                                <v-tabs
+                                    color="cyan"
+                                    dark
+                                    slider-color="yellow"
                                 >
-                                    <v-card flat>
-                                        <v-text-field
-                                            v-model="getParent(parentIndex).name"
-                                            label="Parent's name"
-                                            :rules="[() => getParent(parentIndex).name.length > 0 || 'Required field']"
-                                            solo
-                                            required
-                                        ></v-text-field>
-                                        <v-select
-                                            v-model="getParent(parentIndex).sex"
-                                            :items="['Male', 'Female', 'Other']"
-                                            label="Parent's assigned at birth"
-                                            solo
-                                            required
-                                        ></v-select> 
-                                        <v-text-field
-                                            type="number"
-                                            v-model="getParent(parentIndex).yob"
-                                            label="Parent's year of birth"
-                                            :rules="[() => !isNaN(parseInt(getParent(parentIndex).yob)) || 'Invalid year (yyyy)']"
-                                            solo
-                                            required
-                                        ></v-text-field>
-                                    </v-card>
-                                </v-tab-item>
-                            </v-tabs>
-                            <v-btn small color="primary" :disabled="!phaseValid[2]" @click="nextNode()">Next</v-btn>
-                        </v-form>
-                        <v-form id="proband-children"  v-model="phaseValid[3]" v-if="phase==3">
-                            <h2>Let's talk about {{pedigreeNodes[currentNodeID].name}}!</h2>
-                            <hr>
-                            <v-text-field
-                                type="number"
-                                v-model="pedigreeNodes[currentNodeID].nPartners"
-                                :label="'With how many partners has ' + pedigreeNodes[currentNodeID].name + ' had children?'"
-                                :rules="[() => (!isNaN(parseInt(pedigreeNodes[currentNodeID].nPartners)) && parseInt(pedigreeNodes[currentNodeID].nPartners) >= (pedigreeNodes[currentNodeID].probandAncestor ? 1 : 0)) || 'Invalid number of reproductive partners.']"
-                                solo
-                                :min="pedigreeNodes[currentNodeID].probandAncestor ? 1 : 0"
-                                required
-                            ></v-text-field>
-                            <v-tabs
-                                color="cyan"
-                                dark
-                                slider-color="yellow"
-                            >
-                                <v-tab
-                                v-for="(partnerID, partnerIndex) in pedigreeNodes[currentNodeID].partners"
-                                :key="partnerID"
-                                    ripple
-                                >
-                                    Partner {{partnerIndex+1}}
-                                </v-tab>
-                                <v-tab-item
-                                    v-for="(partnerID, partnerIndex) in pedigreeNodes[currentNodeID].partners"
+                                    <v-tab
+                                    v-for="(partnerID, partnerIndex) in pedigreeNodes[currentNodeID].partners.slice(pedigreeNodes[currentNodeID].probandAncestor ? 1 : 0)"
                                     :key="partnerID"
-                                >
-                                    <v-card flat>
-                                        <v-text-field
-                                            v-model="pedigreeNodes[partnerID].name"
-                                            label="Partner's name"
-                                            :rules="[() => pedigreeNodes[partnerID].name.length > 0 || 'Required field']"
-                                            solo
-                                            required
-                                        ></v-text-field>
-                                        <v-select
-                                            v-model="pedigreeNodes[partnerID].sex"
-                                            :items="['Male', 'Female', 'Other']"
-                                            label="Partner's sex assigned at birth"
-                                            solo
-                                            required
-                                        ></v-select> 
-                                        <v-text-field
-                                            type="number"
-                                            v-model="pedigreeNodes[partnerID].yob"
-                                            label="Partner's year of birth"
-                                            :rules="[() => !isNaN(parseInt(pedigreeNodes[partnerID].yob)) || 'Invalid year (yyyy)']"
-                                            solo
-                                            required
-                                        ></v-text-field>
-                                        <v-text-field
-                                            type="number"
-                                            v-model="pedigreeNodes[partnerID].nChildren"
-                                            :label="'How many children does ' + pedigreeNodes[currentNodeID].name + ' have with this partner?'"
-                                            :rules="[() => (!isNaN(pedigreeNodes[partnerID].nChildren) && parseInt(pedigreeNodes[partnerID].nChildren) >= 0) || 'Invalid number of children.']"
-                                            min=0
-                                            solo
-                                            required
-                                        ></v-text-field>
-                                        <br>
-                                        <div v-if="parseInt(pedigreeNodes[partnerID].nChildren) > 0">
-                                            <v-expansion-panel>
-                                                <v-expansion-panel-content
-                                                    v-for="(childID, childIndex) in pedigreeNodes[partnerID].children"
-                                                    :key="childIndex"
-                                                >
-                                                    <div slot="header">Child {{childIndex+1}}</div>
-                                                    <v-card>
-                                                        <v-text-field
-                                                            v-model="pedigreeNodes[childID].name"
-                                                            label="Child's name"
-                                                            :rules="[() => pedigreeNodes[childID].name.length > 0 || 'Required field']"
-                                                            solo
-                                                            required
-                                                        ></v-text-field>
-                                                        <v-select
-                                                            v-model="pedigreeNodes[childID].sex"
-                                                            :items="['Male', 'Female', 'Other']"
-                                                            label="Child's sex assigned at birth?"
-                                                            solo
-                                                            required
-                                                        ></v-select> 
-                                                        <v-text-field
-                                                            type="number"
-                                                            v-model="pedigreeNodes[childID].yob"
-                                                            label="Child's year of birth"
-                                                            :rules="[() => !isNaN(parseInt(pedigreeNodes[childID].yob)) || 'Invalid year (yyyy)']"
-                                                            solo
-                                                            required
-                                                        ></v-text-field>
-                                                    </v-card>
-                                                </v-expansion-panel-content>
-                                            </v-expansion-panel>
-                                        </div>
-                                    </v-card>
-                                </v-tab-item>
-                            </v-tabs>
-                            <v-btn small color="primary" :disabled="!phaseValid[3]" @click="pedigreeNodes[currentNodeID].completedPartners = true; nextNode()">Next</v-btn>
-                        </v-form>
+                                        ripple
+                                    >
+                                        Partner {{partnerIndex+1}}
+                                    </v-tab>
+                                    <v-tab-item
+                                        v-for="(partnerID, partnerIndex) in pedigreeNodes[currentNodeID].partners.slice(pedigreeNodes[currentNodeID].probandAncestor ? 1 : 0)"
+                                        :key="partnerID"
+                                    >
+                                        <v-card flat>
+                                            <v-text-field
+                                                v-model="pedigreeNodes[partnerID].name"
+                                                label="Partner's name"
+                                                :rules="[() => pedigreeNodes[partnerID].name.length > 0 || 'Required field']"
+                                                solo
+                                                required
+                                            ></v-text-field>
+                                            <v-select
+                                                v-model="pedigreeNodes[partnerID].sex"
+                                                :items="['Male', 'Female', 'Other']"
+                                                label="Partner's sex assigned at birth"
+                                                solo
+                                                required
+                                            ></v-select> 
+                                            <v-text-field
+                                                type="number"
+                                                v-model="pedigreeNodes[partnerID].yob"
+                                                label="Partner's year of birth"
+                                                :rules="[() => !isNaN(parseInt(pedigreeNodes[partnerID].yob)) || 'Invalid year (yyyy)']"
+                                                solo
+                                                required
+                                            ></v-text-field>
+                                            <v-text-field
+                                                type="number"
+                                                v-model="pedigreeNodes[partnerID].nChildren"
+                                                :label="'How many children does ' + pedigreeNodes[currentNodeID].name + ' have with this partner?'"
+                                                :rules="[() => (!isNaN(pedigreeNodes[partnerID].nChildren) && parseInt(pedigreeNodes[partnerID].nChildren) >= 0) || 'Invalid number of children.']"
+                                                min=0
+                                                solo
+                                                required
+                                            ></v-text-field>
+                                            <br>
+                                            <div v-if="parseInt(pedigreeNodes[partnerID].nChildren) > 0">
+                                                <v-expansion-panel>
+                                                    <v-expansion-panel-content
+                                                        v-for="(childID, childIndex) in pedigreeNodes[partnerID].children"
+                                                        :key="childIndex"
+                                                    >
+                                                        <div slot="header">Child {{childIndex+1}}</div>
+                                                        <v-card>
+                                                            <v-text-field
+                                                                v-model="pedigreeNodes[childID].name"
+                                                                label="Child's name"
+                                                                :rules="[() => pedigreeNodes[childID].name.length > 0 || 'Required field']"
+                                                                solo
+                                                                required
+                                                            ></v-text-field>
+                                                            <v-select
+                                                                v-model="pedigreeNodes[childID].sex"
+                                                                :items="['Male', 'Female', 'Other']"
+                                                                label="Child's sex assigned at birth?"
+                                                                solo
+                                                                required
+                                                            ></v-select> 
+                                                            <v-text-field
+                                                                type="number"
+                                                                v-model="pedigreeNodes[childID].yob"
+                                                                label="Child's year of birth"
+                                                                :rules="[() => !isNaN(parseInt(pedigreeNodes[childID].yob)) || 'Invalid year (yyyy)']"
+                                                                solo
+                                                                required
+                                                            ></v-text-field>
+                                                        </v-card>
+                                                    </v-expansion-panel-content>
+                                                </v-expansion-panel>
+                                            </div>
+                                        </v-card>
+                                    </v-tab-item>
+                                </v-tabs>
+                                <v-btn small color="primary" :disabled="!phaseValid[4]" @click="pedigreeNodes[currentNodeID].completedPartners = true; nextNode()">Next</v-btn>
+                            </v-form>
+                        </v-card>
                     </div>
                 </div>
             </v-app>
