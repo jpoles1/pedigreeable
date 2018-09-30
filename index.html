@@ -136,7 +136,7 @@
                                                     label="Child's year of birth"
                                                     :rules="[() => !isNaN(parseInt(pedigreeNodes[siblingID].yob)) || 'Invalid year (yyyy)']"
                                                     class="pedigree-questionnaire-field"
-box
+                                                    box
                                                     required
                                                 ></v-text-field>
                                             </v-card>
@@ -152,10 +152,10 @@ box
                                     type="number"
                                     v-model="pedigreeNodes[currentNodeID].nPartners"
                                     :label="'With how many partners has ' + pedigreeNodes[currentNodeID].name + ' had children?'"
-                                    :rules="[() => (!isNaN(parseInt(pedigreeNodes[currentNodeID].nPartners)) && parseInt(pedigreeNodes[currentNodeID].nPartners) >= (pedigreeNodes[currentNodeID].probandAncestor ? 1 : 0)) || 'Invalid number of reproductive partners.']"
+                                    :rules="[() => (!isNaN(parseInt(pedigreeNodes[currentNodeID].nPartners)) && parseInt(pedigreeNodes[currentNodeID].nPartners) >= (pedigreeNodes[currentNodeID].alreadyPartnered ? 1 : 0)) || 'Invalid number of reproductive partners.']"
                                     class="pedigree-questionnaire-field"
                                     box
-                                    :min="pedigreeNodes[currentNodeID].probandAncestor ? 1 : 0"
+                                    :min="pedigreeNodes[currentNodeID].alreadyPartnered ? 1 : 0"
                                     required
                                 ></v-text-field>
                                 <v-tabs
@@ -164,14 +164,14 @@ box
                                     slider-color="yellow"
                                 >
                                     <v-tab
-                                    v-for="(partnerID, partnerIndex) in pedigreeNodes[currentNodeID].partners.slice(pedigreeNodes[currentNodeID].probandAncestor ? 1 : 0)"
+                                    v-for="(partnerID, partnerIndex) in pedigreeNodes[currentNodeID].partners.slice(pedigreeNodes[currentNodeID].alreadyPartnered ? 1 : 0)"
                                     :key="partnerID"
                                         ripple
                                     >
                                         Partner {{partnerIndex+1}}
                                     </v-tab>
                                     <v-tab-item
-                                        v-for="(partnerID, partnerIndex) in pedigreeNodes[currentNodeID].partners.slice(pedigreeNodes[currentNodeID].probandAncestor ? 1 : 0)"
+                                        v-for="(partnerID, partnerIndex) in pedigreeNodes[currentNodeID].partners.slice(pedigreeNodes[currentNodeID].alreadyPartnered ? 1 : 0)"
                                         :key="partnerID"
                                     >
                                         <v-card flat>
@@ -253,9 +253,40 @@ box
                                 </v-tabs>
                                 <v-btn small color="primary" :disabled="!phaseValid[4]" @click="pedigreeNodes[currentNodeID].completedPartners = true; nextNode()">Next</v-btn>
                             </v-form>
+                            <div v-if="phase==5">
+                                <h2>
+                                    You have completed your pedigree! Use the buttons below to export the data:
+                                </h2>
+                            </div>
+                        </v-card>
+                        <br>
+                        <v-card>
+                            <v-btn color="info" @click="dataPrompt()">
+                                <v-icon>cloud_upload</v-icon>
+                            </v-btn>
+                            <v-btn color="info" @click="copyPedigreeToClipboard()">
+                                <v-icon>speaker_notes</v-icon>
+                            </v-btn>
+                            <v-btn color="info" @click="showNotification('Feature not yet ready!')">
+                                <v-icon>cloud_download</v-icon>
+                            </v-btn>        
                         </v-card>
                     </div>
                 </div>
+                <v-snackbar
+                    v-model="showNotificationBar"
+                    :timeout="2000"
+                    right
+                >   
+                    {{notificationText}}
+                    <v-btn
+                        color="pink"
+                        flat
+                        @click="snackbar = false"
+                    >
+                        Close
+                    </v-btn>
+                </v-snackbar>
             </v-app>
         </div>
         <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>

@@ -3,6 +3,7 @@ var initialPedigreeNode = {
     name: "",
     sex: "",
     yob: 1995,
+    proband: false,
     generation: 0,
     parents: [],
     completedParents: false,
@@ -10,7 +11,7 @@ var initialPedigreeNode = {
     nPartners: undefined,
     partners: [],
     completedPartners: false,
-    probandAncestor: false,
+    alreadyPartnered: false,
     nChildren: undefined,
     children: [],
     nSiblings: undefined,
@@ -21,9 +22,11 @@ var app = new Vue({
     el: '#app',
     data: function(){
         return {
+            showNotificationBar: false,
+            notificationText: undefined,
             phase: 1,
             phaseValid: {},
-            probandID: ObjectID().str,
+            probandID: "",
             probandParentID: undefined,
             nProbandSiblings: 0,
             currentNodeID: undefined,
@@ -58,6 +61,57 @@ var app = new Vue({
         },
     },
     methods: {
+        copyToClipboard: function(clipboardPayload){
+            const el = document.createElement('textarea');
+            el.value = clipboardPayload;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+        },
+        showNotification: function(notificationText){
+            this.notificationText = notificationText
+            this.showNotificationBar = true
+        },
+        restartPedigree: function(){
+            //Create initial node for proband
+            var probandNode = JSON.parse(JSON.stringify(initialPedigreeNode))
+            probandNode.proband = true
+            this.probandID = ObjectID().str
+            this.$set(this.pedigreeNodes, this.probandID, probandNode)
+            this.currentNodeID = this.probandID
+        },
+        copyPedigreeToClipboard: function(){
+            this.copyToClipboard(JSON.stringify(this.pedigreeNodes))
+            this.showNotification("Copied pedigree data to clipboard!")
+        },
+        dataPrompt: function(){
+            var promptData = prompt('Paste your pedigree data below:', "{}")
+            if(promptData){
+                var newPedigree = {}
+                try {
+                    newPedigree = JSON.parse(promptData)
+                }
+                catch(e) {
+                    this.showNotification("Invalid JSON input!")
+                    return;
+                }
+                if(newPedigree){                
+                    var probandNode = Object.entries(newPedigree).find(([nodeID, nodeData]) => {
+                        return nodeData.proband == true
+                    })
+                    if(probandNode){
+                        this.probandID = probandNode[0]
+                        this.pedigreeNodes = newPedigree
+                        this.phase = 1;
+                    }
+                    else {
+                        this.showNotification("No proband identified in JSON input!")
+                        return
+                    }
+                }
+            }
+        },
         getParent: function(parentIndex){
             return this.pedigreeNodes[this.pedigreeNodes[this.pedigreeNodes[this.currentNodeID].parents[0]].parents[parentIndex]]
         },
@@ -77,7 +131,7 @@ var app = new Vue({
             probandMotherNode.nChildren = 1
             probandMotherNode.children = [childNodeID]
             probandMotherNode.partners = [reproductionNode.parents[1]]
-            probandMotherNode.probandAncestor = true
+            probandMotherNode.alreadyPartnered = true
             this.$set(this.pedigreeNodes, reproductionNode.parents[0], probandMotherNode)
 
             var probandFatherNode = JSON.parse(JSON.stringify(initialPedigreeNode))
@@ -88,7 +142,7 @@ var app = new Vue({
             probandFatherNode.nChildren = 1
             probandFatherNode.children = [childNodeID]
             probandFatherNode.partners = [reproductionNode.parents[0]]
-            probandFatherNode.probandAncestor = true
+            probandFatherNode.alreadyPartnered = true
             this.$set(this.pedigreeNodes, reproductionNode.parents[1], probandFatherNode)
 
             currentNode.parents = [reproductionNodeID]
@@ -167,6 +221,7 @@ var app = new Vue({
                         if(nodeData.sex == "Male") partnerData.sex = "Female"
                         if(nodeData.sex == "Female") partnerData.sex = "Male"
                         partnerData.partners = [nodeID]
+                        partnerData.alreadyPartnered = true
                         partnerData.reproNodes.push(reproductionNodeID)
                         partnerData.nPartners = 1
                         partnerData.generation = nodeData.generation
@@ -176,7 +231,7 @@ var app = new Vue({
                 })
             }
             //Delete extra partners
-            if(parseInt(nodeData.nPartners) >= (nodeData.probandAncestor ? 1 : 0) && parseInt(nodeData.nPartners) < nodeData.partners.length) {
+            if(parseInt(nodeData.nPartners) >= (nodeData.alreadyPartnered ? 1 : 0) && parseInt(nodeData.nPartners) < nodeData.partners.length) {
                 nodeData.partners.slice(parseInt(nodeData.nPartners)).forEach((partnerID) => {
                     this.$delete(updatedPedigree, partnerID)
                 })
@@ -283,9 +338,6 @@ var app = new Vue({
         }
     },
     mounted: function(){
-        //Create initial node for proband
-        var probandNode = JSON.parse(JSON.stringify(initialPedigreeNode))
-        this.$set(this.pedigreeNodes, this.probandID, probandNode)
-        this.currentNodeID = this.probandID
+        this.restartPedigree()
     }
 })
