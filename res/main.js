@@ -160,6 +160,9 @@ var app = new Vue({
                         this.$delete(updatedPedigree, partnerID)
                     })
                     nodeData.reproNodes.slice(parseInt(nodeData.nPartners)).forEach((reproductionNodeID) => {
+                        updatedPedigree[reproductionNodeID].children.forEach((childID) => {
+                            this.$delete(updatedPedigree, childID)
+                        })
                         this.$delete(updatedPedigree, reproductionNodeID)
                     })
                     nodeData.partners = nodeData.partners.slice(0, parseInt(nodeData.nPartners))
@@ -174,9 +177,14 @@ var app = new Vue({
                             this.$set(updatedPedigree, nodeID, nodeData)
                             var childData = JSON.parse(JSON.stringify(initialPedigreeNode))
                             childData.generation = nodeData.generation + 1
-                            //TODO: verify below logic is correct
-                            childData.parents = [this.pedigreeNodes[nodeID].reproNodes[0]]
+                            //TODO: verify this selection of reproNode ID is correct
+                            var reproNodeID = this.pedigreeNodes[nodeID].reproNodes[0]
+                            childData.parents = [reproNodeID]
                             this.$set(updatedPedigree, nodeData.children[childIndex], childData)
+                            var reproNode = updatedPedigree[reproNodeID]
+                            reproNode.children.push(nodeData.children[childIndex])
+                            console.log(reproNode)
+                            this.$set(updatedPedigree, reproNodeID, reproNode)
                         }
                     })
                 }
