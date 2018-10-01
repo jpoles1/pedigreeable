@@ -1,5 +1,6 @@
 html {
     overflow: hidden;
+    zoom: 80%;
 }
 #app-container{
     width: 100%;
