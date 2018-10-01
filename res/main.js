@@ -1,5 +1,6 @@
 var currentYear = (new Date()).getFullYear()
 var initialPedigreeNode = {
+    unknownIndividual: false,
     name: "",
     sex: "",
     yob: 1995,
@@ -93,7 +94,7 @@ var app = new Vue({
                     newPedigree = JSON.parse(promptData)
                 }
                 catch(e) {
-                    this.showNotification("Invalid JSON input!")
+                    this.showNotification("Invalid JSON input: " + e)
                     return;
                 }
                 if(newPedigree){                
@@ -162,7 +163,7 @@ var app = new Vue({
         },
         setupNextSiblingQuestionnaire: function(){
             var nextNodeInfo = Object.entries(this.pedigreeNodes).find(([nodeID, nodeData]) => {
-                return nodeData.completedSiblings == false && nodeData.generation > this.treeOpts.minGen && nodeData.name != ""
+                return nodeData.completedSiblings == false && nodeData.generation > this.treeOpts.minGen && nodeData.name != "" && !nodeData.unknownIndividual
             })
             if(nextNodeInfo == undefined){
                 return false
@@ -172,7 +173,7 @@ var app = new Vue({
         },
         setupNextChildrenQuestionnaire: function(){
             var nextNodeInfo = Object.entries(this.pedigreeNodes).find(([nodeID, nodeData]) => {
-                return nodeData.completedPartners == false && nodeData.name != ""
+                return nodeData.completedPartners == false && nodeData.name != "" && !nodeData.unknownIndividual
             })
             if(nextNodeInfo == undefined) {
                 return false
@@ -325,6 +326,7 @@ var app = new Vue({
         generateTree: function () {
             //Iterate over pedigreeNodes and pull out relevant data for graph
             var familyData = Object.entries(this.pedigreeNodes).map(([nodeID, nodeData]) => {
+                if(nodeData.unknownIndividual) nodeData.name = "Unknown"
                 return {
                     id: nodeID,
                     active: nodeID == this.currentNodeID,

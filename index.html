@@ -63,31 +63,37 @@
                                         :key="parentType"
                                     >
                                         <v-card flat>
-                                            <v-text-field
-                                                v-model="getParent(parentIndex).name"
-                                                label="Parent's name"
-                                                :rules="[() => getParent(parentIndex).name.length > 0 || 'Required field']"
-                                                class="pedigree-questionnaire-field"
-                                                box
-                                                required
-                                            ></v-text-field>
-                                            <v-select
-                                                v-model="getParent(parentIndex).sex"
-                                                :items="['Male', 'Female', 'Other']"
-                                                label="Parent's assigned at birth"
-                                                class="pedigree-questionnaire-field"
-                                                box
-                                                required
-                                            ></v-select> 
-                                            <v-text-field
-                                                type="number"
-                                                v-model="getParent(parentIndex).yob"
-                                                label="Parent's year of birth"
-                                                :rules="[() => !isNaN(parseInt(getParent(parentIndex).yob)) || 'Invalid year (yyyy)']"
-                                                class="pedigree-questionnaire-field"
-                                                box
-                                                required
-                                            ></v-text-field>
+                                            <v-switch
+                                                label="Unknown Ancestor"
+                                                v-model="getParent(parentIndex).unknownIndividual"
+                                            ></v-switch>
+                                            <div v-if="!getParent(parentIndex).unknownIndividual">
+                                                <v-text-field
+                                                    v-model="getParent(parentIndex).name"
+                                                    label="Parent's name"
+                                                    :rules="[() => getParent(parentIndex).name.length > 0 || 'Required field']"
+                                                    class="pedigree-questionnaire-field"
+                                                    box
+                                                    required
+                                                ></v-text-field>
+                                                <v-select
+                                                    v-model="getParent(parentIndex).sex"
+                                                    :items="['Male', 'Female', 'Other']"
+                                                    label="Parent's assigned at birth"
+                                                    class="pedigree-questionnaire-field"
+                                                    box
+                                                    required
+                                                ></v-select> 
+                                                <v-text-field
+                                                    type="number"
+                                                    v-model="getParent(parentIndex).yob"
+                                                    label="Parent's year of birth"
+                                                    :rules="[() => !isNaN(parseInt(getParent(parentIndex).yob)) || 'Invalid year (yyyy)']"
+                                                    class="pedigree-questionnaire-field"
+                                                    box
+                                                    required
+                                                ></v-text-field>    
+                                            </div>
                                         </v-card>
                                     </v-tab-item>
                                 </v-tabs>
@@ -255,21 +261,25 @@
                             </v-form>
                             <div v-if="phase==5">
                                 <h2>
-                                    You have completed your pedigree! Use the buttons below to export the data:
+                                    You have completed your pedigree!
+                                    <br>
+                                    Use the buttons below to export the data.
                                 </h2>
                             </div>
                         </v-card>
                         <br>
                         <v-card>
-                            <v-btn color="info" @click="dataPrompt()">
-                                <v-icon>cloud_upload</v-icon>
-                            </v-btn>
-                            <v-btn color="info" @click="copyPedigreeToClipboard()">
-                                <v-icon>speaker_notes</v-icon>
-                            </v-btn>
-                            <v-btn color="info" @click="showNotification('Feature not yet ready!')">
-                                <v-icon>cloud_download</v-icon>
-                            </v-btn>        
+                            <div style="display: flex; justify-content: center">
+                                <v-btn color="info" @click="dataPrompt()">
+                                    <v-icon>cloud_upload</v-icon>
+                                </v-btn>
+                                <v-btn color="info" @click="copyPedigreeToClipboard()">
+                                    <v-icon>speaker_notes</v-icon>
+                                </v-btn>
+                                <v-btn color="info" @click="showNotification('Feature not yet ready!')">
+                                    <v-icon>cloud_download</v-icon>
+                                </v-btn>      
+                            </div>  
                         </v-card>
                     </div>
                 </div>
