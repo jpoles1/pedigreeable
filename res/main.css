@@ -12,6 +12,7 @@ html {
 #treeMap{
     width: 69%;
     height: 100%;
+    cursor: move;
 }
 #treeForm{
     width: 30%;
