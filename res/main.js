@@ -25,6 +25,7 @@ var app = new Vue({
         return {
             showNotificationBar: false,
             notificationText: undefined,
+            notificationTimeout: 5000,
             phase: 1,
             phaseValid: {},
             probandID: "",
@@ -70,8 +71,9 @@ var app = new Vue({
             document.execCommand('copy');
             document.body.removeChild(el);
         },
-        showNotification: function(notificationText){
+        showNotification: function(notificationText, notificationTimeout=2000){
             this.notificationText = notificationText
+            this.notificationTimeout = notificationTimeout
             this.showNotificationBar = true
         },
         restartPedigree: function(){
@@ -94,7 +96,7 @@ var app = new Vue({
                     newPedigree = JSON.parse(promptData)
                 }
                 catch(e) {
-                    this.showNotification("Invalid JSON input: " + e)
+                    this.showNotification("Invalid JSON input:<br>" + e, 10000)
                     return;
                 }
                 if(newPedigree){                

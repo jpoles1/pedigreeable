@@ -285,10 +285,10 @@
                 </div>
                 <v-snackbar
                     v-model="showNotificationBar"
-                    :timeout="2000"
+                    :timeout="notificationTimeout"
                     right
                 >   
-                    {{notificationText}}
+                    <div v-html="notificationText"></div>
                     <v-btn
                         color="pink"
                         flat
