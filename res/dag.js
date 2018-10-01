@@ -27,7 +27,14 @@ function renderDAG(dagData, treeOpts) {
     if(!treeOpts.height){
         treeOpts.height = targetSelection.node().getBoundingClientRect().height - treeOpts.margin
     }
-    const svgSelection = targetSelection.append("svg");
+
+    const svgSelection = targetSelection.append("svg")
+        .attr("width", "100%")
+        .attr("height", "100%")
+        .call(d3.zoom().on("zoom", function () {
+            svgSelection.attr("transform", d3.event.transform)
+        })).append("g");
+
     svgSelection.attr("width", treeOpts.width + treeOpts.margin).attr("height", treeOpts.height + treeOpts.margin)
 
     function elbow(d, i) {
