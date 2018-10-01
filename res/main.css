@@ -12,6 +12,8 @@ html {
 #treeMap{
     width: 69%;
     height: 100%;
+}
+#treeMap svg { 
     cursor: move;
 }
 #treeForm{
@@ -39,6 +41,7 @@ hr{
     border-style: solid;
     border-width: 1px;
     font-size: 60%;
+    cursor: pointer;
 }
 .node p {
     margin: 10px 0;
